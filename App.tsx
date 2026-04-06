@@ -124,20 +124,32 @@ const App: React.FC = () => {
               "refleksi": ["langkah 1", "langkah 2", "langkah 3", "langkah 4", "langkah 5"]
             }
           ],
-          "asesmenAwal": "deskripsi instrumen tes tulis/rubrik lengkap",
-          "asesmenProses": "deskripsi observasi/rubrik/LKPD lengkap",
-          "asesmenAkhir": "deskripsi tes tulis/produk/portofolio lengkap",
+          "asesmenAwal": "Konten LENGKAP Instrumen Asesmen Awal (soal, panduan, rubrik detail dalam format HTML table)",
+          "asesmenAwalSummary": "Garis besar/ringkasan singkat asesmen awal (1-2 kalimat) untuk tabel identitas",
+          "asesmenProses": "Konten LENGKAP Instrumen Asesmen Proses (lembar observasi, rubrik kinerja dalam format HTML table)",
+          "asesmenProsesSummary": "Garis besar/ringkasan singkat asesmen proses (1-2 kalimat) untuk tabel identitas",
+          "asesmenAkhir": "Konten LENGKAP Instrumen Asesmen Akhir (kisi-kisi; Gunakan judul 'I. Pilihlah salah satu jawaban yang paling benar dengan memberi tanda silang !' untuk minimal 20 soal pilihan ganda dengan nomor soal dan opsi a, b, c, d di baris baru; Gunakan judul 'II. Isilah titik - titik dibawah ini dengan jawaban yang benar !' untuk 10 soal isian singkat; Gunakan judul 'III. Jawablah pertanyaan dibawah ini dengan benar !' untuk 5 soal uraian; Kunci Jawaban LENGKAP; serta rubrik detail dalam format HTML table)",
+          "asesmenAkhirSummary": "Garis besar/ringkasan singkat asesmen akhir (1-2 kalimat) untuk tabel identitas",
           "lkpd": [
             {
               "pertemuan": 1,
-              "isi": "Konten Lembar Kerja Peserta Didik (LKPD) lengkap dengan instruksi tugas dan Rubrik Penilaian. Sesuaikan konten dengan TP: ${formData.tp}, Model Pembelajaran: ${formData.pertemuanDetails[0]?.model}, dan Metode: ${formData.pertemuanDetails[0]?.methods.join(', ')}"
+              "isi": "Konten Lembar Kerja Peserta Didik (LKPD) lengkap dengan Materi Lengkap dan Mendalam (uraikan secara sangat detail dan komprehensif, minimal 1000 kata), Tugas Peserta Didik (instruksi tugas), dan Rubrik Penilaian. Sesuaikan konten dengan TP: ${formData.tp}, Model Pembelajaran: ${formData.pertemuanDetails[0]?.model}, dan Metode: ${formData.pertemuanDetails[0]?.methods.join(', ')}"
             }
           ]
         }
         PENTING: 
         1. Buat array "lkpd" sesuai jumlah pertemuan (${formData.jumlahPertemuan}). Setiap item harus disesuaikan dengan model dan metode pertemuan masing-masing.
         2. Integrasikan secara eksplisit nilai-nilai dari Dimensi Profil Lulusan (${(formData.dimensiProfil || []).join(', ')}) dan Topik Panca Cinta (${(formData.topikPancaCinta || []).join(', ')}) ke dalam setiap langkah "pengalamanBelajar" (Memahami, Mengaplikasi, Refleksi) agar pembelajaran lebih berkarakter, bermakna, dan sesuai dengan identitas madrasah.
+        3. Untuk bagian "asesmenAwal", "asesmenProses", "asesmenAkhir", dan "lkpd", berikan KONTEN LENGKAP, SIAP PAKAI, dan ESTETIK. 
+           - Gunakan format HTML (seperti <table>, <ul>, <li>, <strong>) untuk struktur yang rapi.
+           - KHUSUS RUBRIK: WAJIB menggunakan format <table> dengan border agar rapi dan profesional.
+           - Narasi harus detail, mencakup instruksi spesifik untuk guru dan siswa.
+           - Asesmen Awal: Sertakan soal tes dan tabel rubrik kesiapan.
+           - Asesmen Proses: Sertakan lembar observasi dan rubrik kinerja dalam format tabel.
+           - Asesmen Akhir: Sertakan kisi-kisi; Gunakan judul "I. Pilihlah salah satu jawaban yang paling benar dengan memberi tanda silang !" untuk minimal 20 soal pilihan ganda (nomor soal, opsi a, b, c, d di baris baru); Gunakan judul "II. Isilah titik - titik dibawah ini dengan jawaban yang benar !" untuk 10 soal isian singkat; Gunakan judul "III. Jawablah pertanyaan dibawah ini dengan benar !" untuk 5 soal uraian; Kunci Jawaban LENGKAP; serta rubrik penilaian detail dalam format tabel.
+           - LKPD: Sertakan Materi Lengkap dan Mendalam (uraikan secara sangat detail dan komprehensif, minimal 700-1000 kata untuk memberikan pemahaman materi yang utuh bagi siswa), Langkah Kerja, dan Rubrik dalam format tabel.
         Bahasa Indonesia formal, terstruktur, bermakna dan menggembirakan.
+        HANYA KELUARKAN JSON. JANGAN ADA TEKS LAIN SEBELUM ATAU SESUDAH JSON.
       `;
 
       const response = await ai.models.generateContent({
@@ -148,7 +160,21 @@ const App: React.FC = () => {
         }
       });
 
-      const result = JSON.parse(response.text || '{}');
+      let cleanText = response.text || '{}';
+      // Robust JSON extraction in case of extra characters
+      const firstBrace = cleanText.indexOf('{');
+      const lastBrace = cleanText.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+      }
+
+      let result;
+      try {
+        result = JSON.parse(cleanText);
+      } catch (e) {
+        console.error("JSON Parse Error. Raw text:", response.text);
+        throw new Error("Gagal memproses data dari AI. Silakan coba lagi.");
+      }
       
       const safeResult: GeneratedContent = {
         integrasiKBC: result.integrasiKBC || '',
@@ -163,8 +189,11 @@ const App: React.FC = () => {
           refleksi: Array.isArray(pb.refleksi) ? pb.refleksi : []
         })) : [],
         asesmenAwal: result.asesmenAwal || '',
+        asesmenAwalSummary: result.asesmenAwalSummary || '',
         asesmenProses: result.asesmenProses || '',
+        asesmenProsesSummary: result.asesmenProsesSummary || '',
         asesmenAkhir: result.asesmenAkhir || '',
+        asesmenAkhirSummary: result.asesmenAkhirSummary || '',
         lkpd: Array.isArray(result.lkpd) ? result.lkpd.map((l: any) => ({
           pertemuan: l.pertemuan || 1,
           isi: l.isi || ''
@@ -199,8 +228,8 @@ const App: React.FC = () => {
         }
         h3 { font-size: 14pt; margin: 0 0 5px 0; text-align: center; }
         p, li { margin: 0; padding: 0; margin-bottom: 1px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 10px; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 3px 5px; vertical-align: top; word-wrap: break-word; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 10px; table-layout: auto; }
+        th, td { border: 1px solid #000; padding: 5px; vertical-align: top; word-wrap: break-word; }
         .no-border { border: none !important; }
         .bg-green-800 { background-color: #064e3b !important; color: white !important; font-weight: bold; }
         .bg-slate-50 { background-color: #f8fafc !important; }
@@ -482,9 +511,9 @@ const App: React.FC = () => {
                       <tr><th colSpan={2} className="bg-green-800 text-white p-2 text-left border border-green-900 uppercase">V. ASESMEN PEMBELAJARAN</th></tr>
                     </thead>
                     <tbody>
-                      <tr><td className="border border-slate-300 p-1 w-[35%] bg-slate-50 font-semibold">Asesmen Awal (Diagnostik)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenAwal}</td></tr>
-                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Asesmen Proses (Formatif)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenProses}</td></tr>
-                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Asesmen Akhir (Sumatif)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenAkhir}</td></tr>
+                      <tr><td className="border border-slate-300 p-1 w-[35%] bg-slate-50 font-semibold">Asesmen Awal (Diagnostik)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenAwalSummary}</td></tr>
+                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Asesmen Proses (Formatif)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenProsesSummary}</td></tr>
+                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Asesmen Akhir (Sumatif)</td><td className="border border-slate-300 p-1 text-sm">{generated.asesmenAkhirSummary}</td></tr>
                     </tbody>
                   </table>
 
@@ -502,47 +531,30 @@ const App: React.FC = () => {
                   <div className="page-break"></div>
                   <div className="text-center mt-6">
                     <h3 className="text-xl font-bold uppercase underline">LAMPIRAN - LAMPIRAN</h3>
-                    <p className="text-slate-500 text-gray italic text-sm mt-1">copy prompt dibawah paste di gemini canvas kemudian paste lagi disini</p>
                   </div>
 
                   <div className="mt-6">
                     <h4 className="font-bold uppercase">LAMPIRAN 1 : ASESSMEN AWAL</h4>
-                    <p>buatkan assesmen awal dan rubrik dari tujuan pembelajaran</p>
-                    <p className="font-semibold italic mt-1">Tujuan Pembelajaran:</p>
-                    <p className="p-1 border border-slate-200 bg-slate-50 italic">{formData.tp}</p>
-                    <p className="mt-1 font-semibold">dengan deskripsi:</p>
-                    <div className="p-1 border border-slate-200 text-justify text-sm">{generated.asesmenAwal}</div>
+                    <div className="p-4 border border-slate-200 text-justify text-sm bg-slate-50 rounded-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: generated.asesmenAwal }} />
                   </div>
 
                   <div className="mt-6">
                     <h4 className="font-bold uppercase">LAMPIRAN 2 : ASESSMEN PROSES</h4>
-                    <p>buatkan assesmen proses dan rubrik dari tujuan pembelajaran</p>
-                    <p className="font-semibold italic mt-1">Tujuan Pembelajaran:</p>
-                    <p className="p-1 border border-slate-200 bg-slate-50 italic">{formData.tp}</p>
-                    <p className="mt-1 font-semibold">dengan deskripsi:</p>
-                    <div className="p-1 border border-slate-200 text-justify text-sm">{generated.asesmenProses}</div>
+                    <div className="p-4 border border-slate-200 text-justify text-sm bg-slate-50 rounded-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: generated.asesmenProses }} />
                   </div>
 
                   <div className="mt-6">
                     <h4 className="font-bold uppercase">LAMPIRAN 3 : ASESSMEN AKHIR</h4>
-                    <p>buatkan assesmen akhir dan rubrik dari tujuan pembelajaran</p>
-                    <p className="font-semibold italic mt-1">Tujuan Pembelajaran:</p>
-                    <p className="p-1 border border-slate-200 bg-slate-50 italic">{formData.tp}</p>
-                    <p className="mt-1 font-semibold">dengan deskripsi:</p>
-                    <div className="p-1 border border-slate-200 text-justify text-sm">{generated.asesmenAkhir}</div>
+                    <div className="p-4 border border-slate-200 text-justify text-sm bg-slate-50 rounded-lg prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: generated.asesmenAkhir }} />
                   </div>
 
                   <div className="mt-6">
                     <h4 className="font-bold uppercase">LAMPIRAN 4 : LKPD DAN RUBRIK</h4>
-                    <p>buatkan assesmen lkpd dan rubrik dari tujuan pembelajaran</p>
-                    <p className="font-semibold italic mt-1">Tujuan Pembelajaran:</p>
-                    <p className="p-1 border border-slate-200 bg-slate-50 italic">{formData.tp}</p>
-                    
                     {generated.lkpd.map((item, idx) => (
-                      <div key={idx} className="mt-4 border-l-4 border-green-800 pl-4 bg-slate-50 p-2">
-                        <h5 className="font-bold text-green-900 border-b mb-1 pb-1">LKPD Pertemuan Ke-{item.pertemuan}</h5>
-                        <p className="text-[10pt] mb-1 italic text-slate-600">Disesuaikan dengan Model: {formData.pertemuanDetails[idx]?.model || '-'} & Metode: {(formData.pertemuanDetails[idx]?.methods || []).join(', ')}</p>
-                        <div className="text-justify text-sm whitespace-pre-wrap">{item.isi}</div>
+                      <div key={idx} className="mt-4 border-l-4 border-green-800 pl-4 bg-slate-50 p-4 rounded-r-lg">
+                        <h5 className="font-bold text-green-900 border-b mb-2 pb-1">LKPD Pertemuan Ke-{item.pertemuan}</h5>
+                        <p className="text-[10pt] mb-2 italic text-slate-600">Disesuaikan dengan Model: {formData.pertemuanDetails[idx]?.model || '-'} & Metode: {(formData.pertemuanDetails[idx]?.methods || []).join(', ')}</p>
+                        <div className="text-justify text-sm prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: item.isi }} />
                       </div>
                     ))}
                   </div>
