@@ -24,6 +24,7 @@ export interface RPPData {
   pertemuanDetails: MeetingDetail[];
   dimensiProfil: string[];
   topikPancaCinta: string[];
+  tempat?: string;
 }
 
 export interface GeneratedContent {

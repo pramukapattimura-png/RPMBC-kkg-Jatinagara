@@ -28,7 +28,8 @@ const App: React.FC = () => {
     jumlahPertemuan: 1,
     pertemuanDetails: [{ id: 1, model: 'LOK-R', methods: ['Metode Ceramah'] }],
     dimensiProfil: [],
-    topikPancaCinta: []
+    topikPancaCinta: [],
+    tempat: 'Jatinagara'
   });
 
   const [generated, setGenerated] = useState<GeneratedContent | null>(null);
@@ -322,6 +323,10 @@ const App: React.FC = () => {
                     <Input label="NIP Kepala Madrasah" name="nipKepala" value={formData.nipKepala} onChange={handleInputChange} placeholder="Masukkan NIP Kepala" />
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input label="Tempat TTD (Kota/Kecamatan)" name="tempat" value={formData.tempat} onChange={handleInputChange} placeholder="Jatinagara" />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
                     <div className="md:col-span-1">
                       <Select label="Mata Pelajaran" name="mapel" value={formData.mapel} onChange={handleInputChange} options={['-- Pilih Mata Pelajaran --', ...MATA_PELAJARAN]} />
@@ -522,7 +527,7 @@ const App: React.FC = () => {
                     <tbody>
                       <tr>
                         <td className="text-center no-border" width="50%"><p>Mengetahui,</p><p className="mb-12">Kepala Madrasah</p><p className="font-bold underline">{formData.namaKepala || '..............................'}</p><p>NIP: {formData.nipKepala || '..............................'}</p></td>
-                        <td className="text-center no-border" width="50%"><p>Ambulu, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p><p className="mb-12">Guru Mata Pelajaran</p><p className="font-bold underline">{formData.namaGuru || '..............................'}</p><p>NIP: {formData.nipGuru || '..............................'}</p></td>
+                        <td className="text-center no-border" width="50%"><p>{formData.tempat || 'Jatinagara'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p><p className="mb-12">Guru Mata Pelajaran</p><p className="font-bold underline">{formData.namaGuru || '..............................'}</p><p>NIP: {formData.nipGuru || '..............................'}</p></td>
                       </tr>
                     </tbody>
                   </table>
