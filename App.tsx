@@ -450,7 +450,7 @@ const App: React.FC = () => {
                       <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Topik Pembelajaran</td><td className="border border-slate-300 p-1">{formData.topik}</td></tr>
                       <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Fase/Kelas/Semester</td><td className="border border-slate-300 p-1">{formData.fase} / {formData.kelas} / {formData.semester}</td></tr>
                       <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Tahun Pelajaran</td><td className="border border-slate-300 p-1">{formData.tahunPelajaran}</td></tr>
-                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Durasi Pertemuan</td><td className="border border-slate-300 p-1">2 x 35 menit</td></tr>
+                      <tr><td className="border border-slate-300 p-1 bg-slate-50 font-semibold">Durasi Pertemuan</td><td className="border border-slate-300 p-1">{(formData.jumlahPertemuan || 1) * 2} x 35 menit</td></tr>
                     </tbody>
                   </table>
 
